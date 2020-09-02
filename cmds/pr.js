@@ -2,28 +2,34 @@ const ENDPOINT = "https://api.github.com/graphql";
 const axios = require("axios");
 require('dotenv').config();
 
-const get_PR_query = () => {
+const get_PR_query = (owner, repository, PRnum = 1) => {
   // owner, repository, PRnum
   // const GIT_PATH = process.cwd() + "/.git"
   const GET_PR = `
-{
-    repository(owner: "TaniaMalhotra", name: "Fake-News-Classifier-") {
+query getPR($owner: String!, $repository: String!, $PRnum: Int!){
+    repository(owner: $owner, name: $repository) {
         description
         projectsUrl
-        pullRequest(number: 2){
+        pullRequest(number: $PRnum){
           author {
             login
           }
           bodyText
-          comments(first: 10) {
+          comments(first: 20) {
             totalCount
+            nodes {
+              author {
+                login
+              }
+              bodyText
+            }
           }
         }
       }
 }`;
   const data = {
     query: GET_PR,
-    variables: {}
+    variables: { "owner": String(owner), repository: repository, PRnum: PRnum }
   }
   return data;
 }
@@ -31,35 +37,46 @@ const get_PR_query = () => {
 
 
 
-module.exports = (args) => {
-  // args.owner
-  // args.repository
-  // args.
-  console.log(" a pr here")
+module.exports = async function (args) {
+  let owner = args.owner
+  let repository = args.repository
+  let PRnum = args.id
+
   const config = {
     method: "POST",
     url: ENDPOINT,
     headers: {
-      // 'Authorization': "Token 6af3d4704ff1640571a31ab6aad73be5b8c3bcca",
       'Authorization': `bearer ${process.env.github_cli_token}`,
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     },
-    data: get_PR_query(),
+    data: get_PR_query(owner, repository, PRnum),
   };
-  // axios.get(ENDPOINT, {
-  //   method: 'POST',
-  //   headers: {
-  //     'Authorization': "bearer 6af3d4704ff1640571a31ab6aad73be5b8c3bcca",
-  //     'Content-Type': 'application/json',
-  //     'Accept': 'application/json'
-  //   },
-  //   body: JSON.stringify({ query: get_PR_query() })
-  // })
-  axios(config)
-    .then(r => JSON.stringify(r.data))
-    .then((data) => console.log(data))
-    .catch(e => console.log(e));
+
+  try {
+    let response = await axios(config);
+    let repoDetails = response.data.data.repository;
+    let PR_details = repoDetails.pullRequest;
+
+
+    console.log(`
+  Author ${PR_details.author.login} commented: \n
+  ${PR_details.bodyText} \n
+  Comments: ${PR_details.comments.totalCount}
+    `);
+
+
+    let all_comments = PR_details.comments.nodes;
+    all_comments.forEach(node => {
+      console.log(`
+  Author ${node.author.login} commented: \n
+  ${node.bodyText} \n
+    `);
+    });
+
+
+  } catch (e) {
+    console.log(`something went wrong! ${e}`);
+  }
 }
 
-// 6af3d4704ff1640571a31ab6aad73be5b8c3bcca

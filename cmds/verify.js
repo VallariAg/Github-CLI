@@ -19,7 +19,6 @@ module.exports = async function (clientID, device_code) {
 
         if (data.access_token) {
             let access_token = data.access_token;
-            // process.env.github_cli_token = access_token;
             console.log("You're all set!")
             return access_token;
         } else {

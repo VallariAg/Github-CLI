@@ -19,3 +19,5 @@ npm install
     ```
     github-cli verify
     ```
+## Commands
+

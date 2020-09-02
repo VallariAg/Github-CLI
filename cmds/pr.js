@@ -40,7 +40,7 @@ query getPR($owner: String!, $repository: String!, $PRnum: Int!){
 module.exports = async function (args) {
   let owner = args.owner
   let repository = args.repository
-  let PRnum = args.id
+  let PRnum = args._[1]
 
   const config = {
     method: "POST",

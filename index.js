@@ -10,6 +10,7 @@ module.exports = async function () {
     let cmd = args._[0] || "help";
 
     if (args.help || args.h) { cmd = "help" }
+
     switch (cmd) {
         case "help": { require('./cmds/help')(args); break; }
         case "pr": { require("./cmds/pr")(args); break; }

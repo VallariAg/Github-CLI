@@ -29,7 +29,7 @@ query getPR($owner: String!, $repository: String!, $PRnum: Int!){
 }`;
   const data = {
     query: GET_PR,
-    variables: { "owner": String(owner), repository: repository, PRnum: PRnum }
+    variables: { "owner": owner, repository: repository, PRnum: PRnum }
   }
   return data;
 }
@@ -69,7 +69,7 @@ module.exports = async function (args) {
     let all_comments = PR_details.comments.nodes;
     all_comments.forEach(node => {
       console.log(`
-  Author ${node.author.login} commented: \n
+  ${node.author.login} commented: \n
   ${node.bodyText} \n
     `);
     });

@@ -14,6 +14,7 @@ module.exports = async function () {
     switch (cmd) {
         case "help": { require('./cmds/help')(args); break; }
         case "pr": { require("./cmds/pr")(args); break; }
+        case "issue": { require("./cmds/issues")(args); break; }
         case "login": {
             let device_code = await require("./cmds/login")(clientID);
             fs.appendFileSync('.env', `github_cli_deviceCode=${device_code}\n`);

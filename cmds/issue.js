@@ -8,37 +8,30 @@ function get_labels(labels) {
 }
 module.exports = (issue) => {
 
-    // const title = issue.title;
-    // const author = issue.author;
-    // const label = issue.label;
 
-
-    console.log(chalk(`
+    console.log(`
 ${chalk.bold("#" + issue.number + " " + issue.title)}   
 ${chalk.gray(issue.url)}
 ${get_labels(issue.labels)}
-
 Author ${chalk.bold.green(issue.author.login)} commented:
-${chalk.dim.green(issue.bodyText)} \n
-`));
+`);
+    console.group();
+    console.log(`${chalk.cyanBright(issue.bodyText)} \n`);
 
 
     let issue_nodes = issue.timelineItems.nodes;
     issue_nodes.forEach(node => {
 
         if (node.__typename == "IssueComment") {
-            console.log(`
-${chalk.bold.green(node.author.login)} commented: \n
-${chalk.magenta(node.bodyText)} \n
-`);
+            console.log(`${chalk.bold.green(node.author.login)} commented: \n`);
+            console.group();
+            console.log(`${chalk.blueBright(node.bodyText)} \n`);
+            console.groupEnd();
         }
         else if (node.__typename == "LabeledEvent") {
-            // console.log(node)
             let color = node.label.color;
             let name = node.label.name;
-            console.log(`
-Added label ${chalk.inverse.hex(color)(name)}
-`)
+            console.log(`Added label ${chalk.inverse.hex(color)(name)}`);
         }
     });
 }

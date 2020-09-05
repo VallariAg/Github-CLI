@@ -1,5 +1,5 @@
 # Github CLI
-CLI tool to view Issue and PRs on the terminal. 
+[WIP] CLI tool to view Issue and PRs on the terminal. 
 
 # Install
 Install npm. To install all the dependencies, run:

@@ -1,6 +1,8 @@
 const ENDPOINT = "https://api.github.com/graphql";
 const axios = require("axios");
 require('dotenv').config();
+const issue_output = require("./output/print_issue")
+
 
 const get_issue_data = (owner, repository, issueNum = 1) => {
     const GET_ISSUE = `
@@ -8,21 +10,43 @@ query getIssue($owner: String!, $repository: String!, $issueNum: Int!){
     repository(owner: $owner, name: $repository) {
         description
         projectsUrl
-            issue(number: $issueNum){
-              author {
-                  login
-                }
-              bodyText
-              comments(first: 10) {
-                nodes {
-                    author {
-                        login
-                      }
-                bodyText
-                
+    
+    issue(number: $issueNum) {
+      author {
+        login
+      }
+      title
+      url
+      number
+      createdAt
+      closed
+      labels(first: 20) {
+        nodes {
+          color
+          name
+        }
+      }
+      bodyText
+      timelineItems(first: 100) {
+        nodes {
+          __typename
+          ... on IssueComment {
+            author {
+              login
+            }
+            createdAt
+            bodyText
+          }
+          ... on LabeledEvent {
+            label {
+              color
+              name
             }
           }
+        }
       }
+      
+    }
     }
 }
 `;
@@ -54,27 +78,28 @@ module.exports = async function (args) {
 
     try {
         let response = await axios(config);
+        // console.log(response.data)
         let repoDetails = response.data.data.repository;
         let issue_details = repoDetails.issue;
 
+        issue_output(issue_details);
+        //         console.log(`
+        //   Author ${issue_details.author.login} commented: \n
+        //   ${issue_details.bodyText} \n
+        //     `);
 
-        console.log(`
-  Author ${issue_details.author.login} commented: \n
-  ${issue_details.bodyText} \n
-    `);
 
-
-        let all_comments = issue_details.comments.nodes;
-        all_comments.forEach(node => {
-            console.log(`
-  ${node.author.login} commented: \n
-  ${node.bodyText} \n
-    `);
-        });
+        //         let all_comments = issue_details.comments.nodes;
+        //         all_comments.forEach(node => {
+        //             console.log(`
+        //   ${node.author.login} commented: \n
+        //   ${node.bodyText} \n
+        //     `);
+        //         });
 
 
     } catch (e) {
-        console.log(`something went wrong! ${e}`);
+        console.log(`Something went wrong!\nError\n${e}`);
     }
 }
 

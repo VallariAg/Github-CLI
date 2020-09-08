@@ -29,7 +29,9 @@ query pullreq($owner: String!, $repository: String!, $id: Int!){
               abbreviatedOid
               messageHeadline
               author {
-                name
+                user {
+                  login
+                }
               }
             }
           }
@@ -70,6 +72,7 @@ query pullreq($owner: String!, $repository: String!, $id: Int!){
             commit {
               abbreviatedOid
             }
+            mergeRefName
           }
           ... on HeadRefDeletedEvent {
             actor {
@@ -90,7 +93,9 @@ query pullreq($owner: String!, $repository: String!, $id: Int!){
               abbreviatedOid
               messageHeadline
               author {
-                name
+                user {
+                  login
+                }
               }
             }
           }

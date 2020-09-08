@@ -1,4 +1,3 @@
-// const { exec } = require("child_process");
 const minimist = require("minimist");
 const fs = require("fs")
 require('dotenv').config();
@@ -14,7 +13,7 @@ module.exports = async function () {
     switch (cmd) {
         case "help": { require('./cmds/help')(args); break; }
         case "pr": { require("./cmds/pr")(args); break; }
-        case "issue": { require("./utils/issues")(args); break; }
+        case "issue": { require("./cmds/issue")(args); break; }
         case "login": {
             let device_code = await require("./cmds/login")(clientID);
             fs.appendFileSync('.env', `github_cli_deviceCode=${device_code}\n`);

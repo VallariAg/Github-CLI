@@ -1,82 +1,51 @@
-const ENDPOINT = "https://api.github.com/graphql";
-const axios = require("axios");
-require('dotenv').config();
+const chalk = require("chalk")
+const fetch_issue = require("../utils/fetch")
+const ora = require("ora");
 
-const get_PR_query = (owner, repository, PRnum = 1) => {
-  // owner, repository, PRnum
-  // const GIT_PATH = process.cwd() + "/.git"
-  const GET_PR = `
-query getPR($owner: String!, $repository: String!, $PRnum: Int!){
-    repository(owner: $owner, name: $repository) {
-        description
-        projectsUrl
-        pullRequest(number: $PRnum){
-          author {
-            login
-          }
-          bodyText
-          comments(first: 20) {
-            totalCount
-            nodes {
-              author {
-                login
-              }
-              bodyText
-            }
-          }
-        }
-      }
-}`;
-  const data = {
-    query: GET_PR,
-    variables: { "owner": owner, repository: repository, PRnum: PRnum }
-  }
-  return data;
-}
-
-
-
-
-module.exports = async function (args) {
-  let owner = args.owner
-  let repository = args.repository
-  let PRnum = args._[1]
-
-  const config = {
-    method: "POST",
-    url: ENDPOINT,
-    headers: {
-      'Authorization': `bearer ${process.env.github_cli_token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    data: get_PR_query(owner, repository, PRnum),
-  };
-
-  try {
-    let response = await axios(config);
-    let repoDetails = response.data.data.repository;
-    let PR_details = repoDetails.pullRequest;
-
-
-    console.log(`
-  Author ${PR_details.author.login} commented: \n
-  ${PR_details.bodyText} \n
-  Comments: ${PR_details.comments.totalCount}
-    `);
-
-
-    let all_comments = PR_details.comments.nodes;
-    all_comments.forEach(node => {
-      console.log(`
-  ${node.author.login} commented: \n
-  ${node.bodyText} \n
-    `);
-    });
-
-
-  } catch (e) {
-    console.log(`something went wrong! ${e}`);
+function get_labels(labels) {
+  if (labels) {
+    labels.nodes.forEach(({ color, name }) => { console.log(chalk.inverse.hex(color)(name)) })
   }
 }
 
+module.exports = async (args) => {
+  loader = ora("Loading Pull request").start()
+  let pr = await fetch_issue(args);
+  loader.stop();
+
+  if (!pr) {
+    console.log("failed to fetch pull request data");
+    return;
+  }
+
+  console.log(`
+${chalk.bold("#" + pr.number + " " + pr.title)}   
+${chalk.gray(pr.url)}`);
+  get_labels(pr.labels);
+  console.log(`Author ${chalk.bold.green(pr.author.login)} commented:`);
+  console.group();
+  console.log(`${chalk.cyanBright(pr.bodyText)} \n`);
+
+
+  let issue_nodes = pr.timelineItems.nodes;
+  issue_nodes.forEach(node => {
+
+    if (node.__typename == "IssueComment") {
+      console.log(`${chalk.bold.green(node.author.login)} commented: \n`);
+      console.group();
+      console.log(`${chalk.blueBright(node.bodyText)} \n`);
+      console.groupEnd();
+    }
+    else if (node.__typename == "PullRequestCommit") {
+      console.log(`${chalk.bold.green(node.commit.author.name)} commited ${chalk.inverse.grey(node.commit.abbreviatedOid)}`)
+      console.group();
+      console.log(chalk.grey(`${node.commit.messageHeadline}\n`))
+      console.groupEnd();
+    }
+    else if (node.__typename == "LabeledEvent") {
+      let color = node.label.color;
+      let name = node.label.name;
+      console.log(`Added label ${chalk.inverse.hex(color)(name)}`);
+    }
+  });
+}
